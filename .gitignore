@@ -1,0 +1,16 @@
+# Skills (local agent/assistant skills, not part of the project)
+skills/
+.claude/
+.agents/
+*.skill
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+results/cool_white_run.log
+
+# Generated experiment logs
+results/*.log

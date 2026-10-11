@@ -1,0 +1,85 @@
+# All thresholds in one place. Distances are in metres (after metric scale recovery).
+
+frames:
+  per_video: 40            # keyframes per video; 80 images peak at ~12 GB GPU memory in VGGT
+  candidates_per_keyframe: 6   # frames scored for sharpness per keyframe slot
+  max_side: 1920           # saved keyframe size (crops for labelling come from these)
+
+reconstruction:
+  model: facebook/VGGT-1B
+  resolution: 518          # VGGT input long side (multiple of 14)
+
+scale:
+  method: metric_depth     # metric_depth | none
+  model: depth-anything/Depth-Anything-V2-Metric-Indoor-Large-hf
+  fallback_median_depth: 2.0   # used only when method is none: assume this median depth (m)
+
+change:
+  conf_quantile: 0.25      # drop the least confident 25% of depth pixels
+  edge_rel_threshold: 0.02 # 2nd difference of inverse depth / inverse depth above this = depth edge
+  stride: 2                # sample every 2nd pixel when lifting depth to 3D
+  tau_abs: 0.03            # depth agreement margin: max(tau_abs, tau_rel * depth)
+  tau_rel: 0.03
+  min_cos: 0.15            # ignore views that hit a surface at a grazing angle
+  registration_sigma: 0.03 # first-pass tolerance (m) for before/after misregistration; free space must hold across it
+  sigma_from_alignment: 2.5 # second pass: tolerance = this x measured alignment RMSE on unchanged geometry...
+  sigma_min: 0.01          # ...clamped to [sigma_min, sigma_max]
+  sigma_max: 0.05
+  min_self_support: 2      # a point must be confirmed by >= 2 other frames of its own video
+  max_self_free_ratio: 0.3 # ...and not seen through by its own video (moving people, noise)
+  voxel: 0.02              # fusion voxel size
+  min_voxel_frames: 2      # voxel must be seen from >= 2 frames of its video
+  min_obs: 3               # fewer cross-video votes than this -> unknown
+  changed_ratio: 0.75      # free-space votes / all votes above this -> changed
+  unchanged_ratio: 0.35    # below this -> unchanged; in between -> unknown
+
+align:
+  enabled: true            # refine before/after alignment on unchanged geometry
+  max_corr: 0.06
+  max_translation: 0.15    # reject corrections larger than this (likely wrong)
+  max_rotation_deg: 5.0
+
+objects:
+  dbscan_eps_voxels: 2.0   # neighbourhood radius in voxels
+  dbscan_min_samples: 4
+  stack_xy_margin: 0.10    # merge pieces stacked above each other (see-through bodies, thin legs)...
+  stack_max_gap: 0.40      # ...if their footprints overlap and the vertical gap is below this
+  min_voxels: 12           # small items count too (a phone, a mug)
+  min_extent: 0.04         # ignore clusters smaller than 4 cm in every direction
+  min_frames: 3            # cluster must be seen changed from >= 3 frames
+  grow_iterations: 5       # extend objects into adjacent unobserved geometry
+  floor_clearance: 0.015   # growing never enters the floor
+  match_threshold: 0.55    # removed/added pair similarity needed to call it "moved"
+  min_icp_fitness: 0.3
+  min_move: 0.05           # below this displacement a matched pair is not "moved"
+  min_rotation_deg: 15.0   # ...unless it turned at least this much ("rotated")
+  rotation_margin: 0.2     # a rotated pose must fit this much better than "not rotated"
+
+appearance:               # second channel: changes depth cannot see (transparent, small, flat items)
+  enabled: true
+  model: facebook/dinov2-base
+  views: 4                 # warped views of the other video compared per frame
+  min_views: 2             # a pixel needs >= 2 views of the other video to be judged
+  tau_abs: 0.03            # visibility margin when warping / carving
+  tau_rel: 0.03
+  abs_threshold: 0.55      # DINOv2 cosine distance above which a pixel looks different...
+  mad_k: 6.0               # ...and at least median + 6 robust std of this pair
+  min_mask_area: 30        # pixels; smaller blobs are noise
+  hull_min_views: 6        # a hull voxel must be seen by >= 6 frames...
+  hull_ratio: 0.8          # ...and fall inside the changed pixels in >= 80% of them
+  hull_min_voxels: 10
+  hull_core_views: 0.7     # trim hull stretch: keep voxels seen by >= 70% of the cluster's best
+  verify_threshold: 0.72   # before/after crop similarity below this = really changed (static >= 0.76,
+                           # changed 0.41-0.70 on the recorded data); applied to EVERY detection
+  verify_gap: 0.10         # ...and at least this far below nearby control places (same view pairs)
+  side_margin: 0.05        # transparent items: min CLIP score difference to decide removed vs added
+  merge_distance: 0.05     # appearance objects within this of a geometric object are the same one
+
+segment:                  # exact object outlines (Segment Anything)
+  enabled: true
+  model: facebook/sam-vit-large
+
+semantics:
+  use_claude: true         # needs ANTHROPIC_API_KEY (or `ant auth login`); else CLIP labels only
+  model: claude-opus-5-5
+  clip_model: openai/clip-vit-large-patch14

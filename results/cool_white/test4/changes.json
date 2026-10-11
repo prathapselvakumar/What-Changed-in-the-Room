@@ -1,0 +1,93 @@
+{
+  "events": [
+    {
+      "type": "added",
+      "label": "jug",
+      "text": "Jug was added on the table surface, 1.2 m straight ahead of where the first video starts.",
+      "confidence": 0.96,
+      "verified_by_vlm": null,
+      "after": {
+        "label": "jug",
+        "description": null,
+        "label_source": "clip",
+        "found_by": "geometry",
+        "appearance_similarity": 0.468,
+        "control_similarity": 0.84,
+        "center_m": [
+          -0.051,
+          1.236,
+          0.184
+        ],
+        "size_m": [
+          0.162,
+          0.113,
+          0.32
+        ],
+        "yaw_deg": 89.1,
+        "bottom_height_m": 0.024,
+        "height_above_support_m": -0.019,
+        "location": "on the table surface, 1.2 m straight ahead of where the first video starts",
+        "evidence": {
+          "voxels": 26,
+          "views": 40,
+          "free_space_ratio": 0.965
+        },
+        "verified_by_vlm": null
+      },
+      "id": 1
+    }
+  ],
+  "coverage": {
+    "before": {
+      "unchanged_pct": 92.5,
+      "changed_pct": 0.1,
+      "unknown_pct": 7.4
+    },
+    "after": {
+      "unchanged_pct": 90.5,
+      "changed_pct": 0.2,
+      "unknown_pct": 9.2
+    }
+  },
+  "scale": {
+    "method": "metric_depth",
+    "factor": 1.630136251449585,
+    "relative_spread": 0.03496218602495405
+  },
+  "alignment": {
+    "translation_m": 0.0025772176151169896,
+    "rotation_deg": 0.023337934561908233,
+    "rmse_before": 0.005858735474297074,
+    "rmse_after": 0.006094202736646224,
+    "fitness_before": 0.9976490502162874,
+    "fitness_after": 0.9976490502162874,
+    "applied": false,
+    "registration_sigma_m": 0.0146
+  },
+  "inputs": {
+    "before": "data\\reference\\ref1_light1.mp4",
+    "after": "data\\test\\test4.mp4"
+  },
+  "scene": {
+    "video": "test/test4.mp4",
+    "changes": [
+      {
+        "object": "clear plastic jug",
+        "type": "added",
+        "note": "left of the keyboard, by the laptop"
+      }
+    ],
+    "group": "cool_white"
+  },
+  "support_surface": {
+    "name": "table surface",
+    "camera_height_m": 0.43
+  },
+  "timings": {
+    "keyframes_s": 1.4,
+    "reconstruction_s": 0.9,
+    "change_detection_s": 0.0,
+    "objects_s": 16.5,
+    "report_s": 0.3
+  }
+}

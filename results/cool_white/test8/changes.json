@@ -1,0 +1,51 @@
+{
+  "events": [],
+  "coverage": {
+    "before": {
+      "unchanged_pct": 67.7,
+      "changed_pct": 0.0,
+      "unknown_pct": 32.3
+    },
+    "after": {
+      "unchanged_pct": 87.1,
+      "changed_pct": 0.0,
+      "unknown_pct": 12.9
+    }
+  },
+  "scale": {
+    "method": "metric_depth",
+    "factor": 1.9017503261566162,
+    "relative_spread": 0.25419308848885086
+  },
+  "alignment": {
+    "translation_m": 0.0398622278201143,
+    "rotation_deg": 1.558048334160664,
+    "rmse_before": 0.018052911941489058,
+    "rmse_after": 0.0150409682855591,
+    "fitness_before": 0.9757949383517197,
+    "fitness_after": 0.9835171966255678,
+    "applied": true,
+    "registration_sigma_m": 0.0376
+  },
+  "inputs": {
+    "before": "data\\reference\\ref1_light1.mp4",
+    "after": "data\\test\\test8.mp4"
+  },
+  "scene": {
+    "video": "test/test8.mp4",
+    "note": "high camera angle; viewpoint test",
+    "changes": [],
+    "group": "cool_white"
+  },
+  "support_surface": {
+    "name": "table surface",
+    "camera_height_m": 0.49
+  },
+  "timings": {
+    "keyframes_s": 1.4,
+    "reconstruction_s": 0.8,
+    "change_detection_s": 0.0,
+    "objects_s": 5.7,
+    "report_s": 0.2
+  }
+}

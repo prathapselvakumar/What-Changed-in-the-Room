@@ -1,0 +1,93 @@
+{
+  "events": [
+    {
+      "type": "removed",
+      "label": "drinking glass",
+      "text": "Drinking glass was removed. It was on the table surface, 1.6 m straight ahead of where the first video starts.",
+      "confidence": 1.0,
+      "verified_by_vlm": null,
+      "before": {
+        "label": "drinking glass",
+        "description": null,
+        "label_source": "clip-differential",
+        "found_by": "appearance",
+        "appearance_similarity": 0.71,
+        "control_similarity": 0.868,
+        "center_m": [
+          0.082,
+          1.608,
+          0.223
+        ],
+        "size_m": [
+          0.098,
+          0.088,
+          0.19
+        ],
+        "yaw_deg": 103.6,
+        "bottom_height_m": 0.128,
+        "height_above_support_m": -0.014,
+        "location": "on the table surface, 1.6 m straight ahead of where the first video starts",
+        "evidence": {
+          "voxels": 620,
+          "views": 40,
+          "free_space_ratio": 1.0
+        },
+        "verified_by_vlm": null
+      },
+      "id": 1
+    }
+  ],
+  "coverage": {
+    "before": {
+      "unchanged_pct": 88.7,
+      "changed_pct": 0.0,
+      "unknown_pct": 11.3
+    },
+    "after": {
+      "unchanged_pct": 96.2,
+      "changed_pct": 0.0,
+      "unknown_pct": 3.8
+    }
+  },
+  "scale": {
+    "method": "metric_depth",
+    "factor": 1.6389353275299072,
+    "relative_spread": 0.020059263683751678
+  },
+  "alignment": {
+    "translation_m": 0.005965552422533773,
+    "rotation_deg": 0.12473207403449117,
+    "rmse_before": 0.004469745761568291,
+    "rmse_after": 0.004931488004466595,
+    "fitness_before": 0.9995716427500535,
+    "fitness_after": 0.9995716427500535,
+    "applied": false,
+    "registration_sigma_m": 0.0112
+  },
+  "inputs": {
+    "before": "data\\reference\\ref1_light1.mp4",
+    "after": "data\\test\\test7.mp4"
+  },
+  "scene": {
+    "video": "test/test7.mp4",
+    "changes": [
+      {
+        "object": "drinking glass",
+        "type": "removed",
+        "note": "between the black mug and the monitor stand"
+      }
+    ],
+    "group": "cool_white"
+  },
+  "support_surface": {
+    "name": "table surface",
+    "camera_height_m": 0.44
+  },
+  "timings": {
+    "keyframes_s": 1.4,
+    "reconstruction_s": 0.8,
+    "change_detection_s": 0.0,
+    "objects_s": 17.3,
+    "report_s": 0.3
+  }
+}

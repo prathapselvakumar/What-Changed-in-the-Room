@@ -1,0 +1,31 @@
+# Videos are grouped by lighting. Every test in a group is compared with that group's reference.
+# Run a group:   python run.py --group cool_white
+# Run one test:  python run.py --scene test4
+#
+# Lighting was measured from each video's average red/blue colour ratio
+# (cool white ~1.1, warm lamp ~1.7).
+# `changes` per test: what was actually changed (ground truth for evaluation). Cool-white entries were
+# established by comparing matched views of the reference and each test by eye (2026-10-11);
+# warm entries the same way, with less certainty (dark footage).
+
+groups:
+  cool_white:
+    reference: reference/ref1_light1.mp4
+    tests:
+      test3: {video: test/test3.mp4, note: "high camera angle; viewpoint test", changes: []}
+      test4: {video: test/test4.mp4, changes: [{object: clear plastic jug, type: added, note: "left of the keyboard, by the laptop"}]}
+      test5: {video: test/test5.mp4, note: "high camera angle; viewpoint test", changes: []}
+      test6: {video: test/test6.mp4, note: "no-change control", changes: []}
+      test7: {video: test/test7.mp4, changes: [{object: drinking glass, type: removed, note: "between the black mug and the monitor stand"}]}
+      test8: {video: test/test8.mp4, note: "high camera angle; viewpoint test", changes: []}
+
+  warm:
+    reference: reference/ref2_light2.mp4
+    tests:
+      test1: {video: test/test1.mp4, note: "very dark, high angle; no visible change (low confidence)", changes: []}
+      test9: {video: test/test9.mp4, note: "high angle; no visible change", changes: []}
+
+# Example of a filled-in change list:
+#   changes:
+#     - {object: water bottle, type: added, note: "left of the keyboard"}
+#     - {object: mug, type: moved, distance_m: 0.3}

@@ -4,7 +4,7 @@ Evidence-based 3D change detection from two phone videos of the same indoor spac
 
 ![test7 comparison video: a drinking glass was removed](docs/assets/test7.gif)
 
-*Output for test7. Left: the reference video, with the drinking glass outlined next to the black mug. Right: the test video, where a dashed box marks the empty spot. The change list runs underneath. The depth model sees through the glass, so the second (appearance) channel found it. Full video: [results/cool_white/test7/comparison.mp4](results/cool_white/test7/comparison.mp4).*
+*Output for test7. Left: the reference video, with the drinking glass outlined next to the black mug. Right: the test video, where a dashed box marks the empty spot. A light yellow tint marks surfaces that only one video saw, which the system leaves unchecked. The change list runs underneath. The depth model sees through the glass, so the second (appearance) channel found it. Full video: [results/cool_white/test7/comparison.mp4](results/cool_white/test7/comparison.mp4).*
 
 ## Abstract
 
@@ -73,7 +73,7 @@ Segment Anything [5], prompted with the projected box, outlines each object in u
 
 ### 3.5 Output
 
-Each object is named by CLIP from its crop (Claude can name it instead when an API key is set; that path has not been tested). Every sentence, box and arrow is generated from `changes.json`, so the text, the video, the top-down map and the 3D recording agree. Heights are measured from the surface found under each object. Code: [wcitr/semantics.py](wcitr/semantics.py), [wcitr/report.py](wcitr/report.py), [wcitr/video.py](wcitr/video.py).
+Each object is named by CLIP from its crop (Claude can name it instead when an API key is set; that path has not been tested). Every sentence, box and arrow is generated from `changes.json`, so the text, the video, the top-down map and the 3D recording agree. Heights are measured from the surface found under each object. The video shows a short caption per change ("REMOVED: drinking glass, on the table surface"), since the outline already shows where it is; `changes.json` and `report.md` keep the full location and the coordinates in metres. Surfaces that only one video saw are tinted light yellow in that video's half, so the unchecked areas are visible in the footage itself. Code: [wcitr/semantics.py](wcitr/semantics.py), [wcitr/report.py](wcitr/report.py), [wcitr/video.py](wcitr/video.py).
 
 ## 4. Results
 
@@ -197,7 +197,7 @@ Each pair writes to `results/<group>/<test>/`:
 
 | File | Content |
 |---|---|
-| `comparison.mp4` | reference and test side by side, changes outlined, change list, top-down map at the end |
+| `comparison.mp4` | reference and test side by side, changes outlined, unchecked surfaces tinted yellow, change list, top-down map at the end |
 | `changes.json` | every event: type, label, position and size in metres, location, evidence, verification scores |
 | `report.md` | the change list and the share of each video that could not be checked |
 | `topdown.png` | camera paths and unchanged, unchecked and changed geometry seen from above |
@@ -224,7 +224,7 @@ wcitr/
   geometry.py           camera geometry
 tests/test_changes.py   synthetic scenes with known changes
 data/                   videos and scene list
-docs/                   DESIGN.md, CAPTURE_GUIDE.md, RESEARCH_PLAN.md (initial plan), assets/
+docs/                   DESIGN.md (design note), CAPTURE_GUIDE.md, assets/
 ```
 
 ## References

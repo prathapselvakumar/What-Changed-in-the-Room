@@ -4,6 +4,7 @@
       "type": "removed",
       "label": "drinking glass",
       "text": "Drinking glass was removed. It was on the table surface, 1.6 m straight ahead of where the first video starts.",
+      "caption": "REMOVED: drinking glass, on the table surface",
       "confidence": 1.0,
       "verified_by_vlm": null,
       "before": {
@@ -84,10 +85,10 @@
     "camera_height_m": 0.44
   },
   "timings": {
-    "keyframes_s": 1.4,
-    "reconstruction_s": 0.8,
+    "keyframes_s": 0.8,
+    "reconstruction_s": 0.6,
     "change_detection_s": 0.0,
-    "objects_s": 17.3,
-    "report_s": 0.3
+    "objects_s": 17.9,
+    "report_s": 0.7
   }
 }

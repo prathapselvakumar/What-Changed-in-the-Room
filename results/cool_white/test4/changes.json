@@ -4,6 +4,7 @@
       "type": "added",
       "label": "jug",
       "text": "Jug was added on the table surface, 1.2 m straight ahead of where the first video starts.",
+      "caption": "NEW: jug, on the table surface",
       "confidence": 0.96,
       "verified_by_vlm": null,
       "after": {
@@ -84,10 +85,10 @@
     "camera_height_m": 0.43
   },
   "timings": {
-    "keyframes_s": 1.4,
-    "reconstruction_s": 0.9,
+    "keyframes_s": 1.0,
+    "reconstruction_s": 0.7,
     "change_detection_s": 0.0,
-    "objects_s": 16.5,
+    "objects_s": 15.3,
     "report_s": 0.3
   }
 }

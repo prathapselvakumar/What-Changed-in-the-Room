@@ -215,7 +215,7 @@ def run_pipeline(before, after, out, cfg, force=False, scene_info=None):
     (out / "changes.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     step("comparison video")
-    clip = video.make_comparison_video(out, recon, data, before, after, segmenter=segmenter)
+    clip = video.make_comparison_video(out, recon, data, before, after, segmenter=segmenter, results=results)
     print(f"video: {clip}")
 
     print()

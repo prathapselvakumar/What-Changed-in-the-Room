@@ -47,6 +47,27 @@ def set_support_surface(E):
     SUPPORT["camera_height_m"] = round(cam_height, 2)
 
 
+def support_phrase(obj):
+    """What the object stands on, measured from the surface found under it."""
+    lift = obj["bottom"] - obj.get("support_z", 0.0)
+    if lift < 0.06:
+        return f"on the {SUPPORT['name']}"
+    return f"about {lift:.2f} m above the {SUPPORT['name']}"
+
+
+def caption(e, label):
+    """Short on-screen caption. The video shows WHERE; the caption says what happened."""
+    if e["type"] == "moved":
+        text = f"MOVED: {label}, {np.linalg.norm(e['displacement']):.2f} m"
+        if e["rotation_deg"] is not None and abs(e["rotation_deg"]) >= 15:
+            text += f", turned {abs(e['rotation_deg']):.0f} deg"
+        return text
+    if e["type"] == "rotated":
+        return f"ROTATED: {label}, about {abs(e['rotation_deg']):.0f} deg"
+    obj = e["before"] if e["type"] == "removed" else e["after"]
+    return f"{'REMOVED' if e['type'] == 'removed' else 'NEW'}: {label}, {support_phrase(obj)}"
+
+
 def where(obj):
     x, y, _ = obj["center"]
     dist = float(np.hypot(x, y))
@@ -63,11 +84,7 @@ def where(obj):
         direction = f"behind, to the {side}"
     else:
         direction = "behind"
-    lift = obj["bottom"] - obj.get("support_z", 0.0)
-    if lift < 0.06:
-        height = f"on the {SUPPORT['name']}"
-    else:
-        height = f"about {lift:.2f} m above the {SUPPORT['name']}"
+    height = support_phrase(obj)
     return f"{height}, {dist:.1f} m {direction} of where the first video starts"
 
 
@@ -129,6 +146,7 @@ def build_events(events):
             "type": e["type"],
             "label": label,
             "text": text,
+            "caption": caption(e, label),
             "confidence": round(conf, 2),
             "verified_by_vlm": (all(verified) if verified else None),
         }

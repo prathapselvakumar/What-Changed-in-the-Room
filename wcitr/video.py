@@ -8,6 +8,7 @@ into every frame of both videos:
                     and dashed outlines where NEW objects will appear (the spot was empty)
     test side:      NEW objects (green), MISSING items as a dashed red box on the now-empty
                     spot, and moved objects at their NEW position with an arrow from the old one
+    both sides:     a light yellow tint on surfaces only that video saw (unknown, not checked)
 """
 
 import shutil
@@ -18,6 +19,7 @@ import cv2
 import numpy as np
 from scipy.spatial.transform import Rotation, Slerp
 
+from .changes import UNKNOWN
 from .geometry import rotation_about_z
 
 COLORS = {"removed": (40, 39, 214), "added": (44, 160, 44), "moved": (180, 119, 31), "rotated": (189, 103, 148)}
@@ -169,21 +171,60 @@ def header(img, text, color):
     cv2.putText(img, text, (14, 31), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2, cv2.LINE_AA)
 
 
+UNKNOWN_BGR = (138, 213, 242)  # same light yellow as the top-down map
+
+
+def unchecked_tint(img, cam, xyz_all, unknown_mask, scale=4, alpha=0.35):
+    """Tint the surfaces this video saw that the other video never saw (state UNKNOWN).
+
+    Voxels are splatted into a quarter-resolution depth buffer so only surfaces facing this
+    camera are tinted, not the unknown voxels hidden behind nearer geometry."""
+    K, R, t = cam
+    H, W = img.shape[:2]
+    h, w = H // scale, W // scale
+    Xc = xyz_all @ R.T + t
+    z = Xc[:, 2]
+    ok = z > 0.05
+    uv = (Xc[ok, :2] / z[ok, None]) @ K[:2, :2].T + K[:2, 2]
+    u, v = (uv[:, 0] / scale).astype(int), (uv[:, 1] / scale).astype(int)
+    inside = (u >= 0) & (u < w) & (v >= 0) & (v < h)
+    u, v, zz, unk = u[inside], v[inside], z[ok][inside], unknown_mask[ok][inside]
+    if not unk.any():
+        return img
+    zbuf = np.full((h, w), np.inf, np.float32)
+    np.minimum.at(zbuf, (v, u), zz)
+    zbuf = cv2.erode(zbuf, np.ones((3, 3), np.uint8))  # min over a 3x3 neighbourhood
+    visible = unk & (zz <= zbuf[v, u] + 0.04)
+    mask = np.zeros((h, w), np.uint8)
+    mask[v[visible], u[visible]] = 255
+    mask = cv2.morphologyEx(cv2.dilate(mask, np.ones((3, 3), np.uint8)), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+    mask = cv2.resize(mask, (W, H), interpolation=cv2.INTER_LINEAR) > 127
+    if not mask.any():
+        return img
+    overlay = img.copy()
+    overlay[mask] = UNKNOWN_BGR
+    out = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+    cs, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(out, [c for c in cs if cv2.contourArea(c) > 400], -1, UNKNOWN_BGR, 1, cv2.LINE_AA)
+    return out
+
+
 def footer(events, width, coverage):
     f = np.full((FOOTER_H, width, 3), 250, np.uint8)
     if not events:
         cv2.putText(f, "No changes found in the areas both videos could see.", (16, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (40, 40, 40), 2, cv2.LINE_AA)
     for k, e in enumerate(events[:5]):
-        text = f"{e['id']}. {e['text']}"
+        text = f"{e['id']}. {e.get('caption', e['text'])}"
         if e.get("verified_by_vlm") is False:
             text += "  (unconfirmed)"
         cv2.rectangle(f, (14, 16 + 28 * k), (30, 32 + 28 * k), COLORS[e["type"]], -1)
         cv2.putText(f, text[:150], (40, 31 + 28 * k), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (30, 30, 30), 1, cv2.LINE_AA)
     if coverage:
-        note = (f"Not checked: {coverage['after']['unknown_pct']:.0f}% of the test view was not visible in the "
-                f"reference (changes there are not reported).")
-        cv2.putText(f, note, (16, FOOTER_H - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (110, 110, 110), 1, cv2.LINE_AA)
+        cv2.rectangle(f, (14, FOOTER_H - 26), (30, FOOTER_H - 10), UNKNOWN_BGR, -1)
+        note = (f"Yellow tint: seen in only one video, so not checked ({coverage['before']['unknown_pct']:.0f}% of the "
+                f"reference, {coverage['after']['unknown_pct']:.0f}% of the test). Changes there are not reported.")
+        cv2.putText(f, note, (40, FOOTER_H - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (90, 90, 90), 1, cv2.LINE_AA)
     return f
 
 
@@ -200,7 +241,7 @@ def summary_card(out_dir, width, height):
 
 
 def make_comparison_video(out_dir, recon, report_data, before_path, after_path, out_name="comparison.mp4",
-                          playback_fps=15, summary_seconds=4, segmenter=None):
+                          playback_fps=15, summary_seconds=4, segmenter=None, results=None):
     events = report_data["events"]
     fb, _ = read_frames(before_path)
     fa, _ = read_frames(after_path)
@@ -215,8 +256,12 @@ def make_comparison_video(out_dir, recon, report_data, before_path, after_path, 
     for i in range(n):
         ib = round(i * (len(fb) - 1) / max(n - 1, 1))
         ia = round(i * (len(fa) - 1) / max(n - 1, 1))
-        left = cv2.resize(annotate(fb[ib], cams_b[ib], events, "before", segmenter), (PANEL_W, PANEL_H), interpolation=cv2.INTER_AREA)
-        right = cv2.resize(annotate(fa[ia], cams_a[ia], events, "after", segmenter), (PANEL_W, PANEL_H), interpolation=cv2.INTER_AREA)
+        fb_i, fa_i = fb[ib], fa[ia]
+        if results is not None:  # tint first, so outlines and labels stay on top
+            fb_i = unchecked_tint(fb_i, cams_b[ib], results[0]["xyz"], results[0]["state"] == UNKNOWN)
+            fa_i = unchecked_tint(fa_i, cams_a[ia], results[1]["xyz"], results[1]["state"] == UNKNOWN)
+        left = cv2.resize(annotate(fb_i, cams_b[ib], events, "before", segmenter), (PANEL_W, PANEL_H), interpolation=cv2.INTER_AREA)
+        right = cv2.resize(annotate(fa_i, cams_a[ia], events, "after", segmenter), (PANEL_W, PANEL_H), interpolation=cv2.INTER_AREA)
         header(left, "REFERENCE (before)", (255, 255, 255))
         header(right, "TEST (after)", (255, 255, 255))
         writer.write(np.vstack([np.hstack([left, right]), foot]))

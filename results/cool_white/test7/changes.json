@@ -85,10 +85,10 @@
     "camera_height_m": 0.44
   },
   "timings": {
-    "keyframes_s": 0.8,
-    "reconstruction_s": 0.6,
+    "keyframes_s": 1.5,
+    "reconstruction_s": 0.9,
     "change_detection_s": 0.0,
-    "objects_s": 17.9,
-    "report_s": 0.7
+    "objects_s": 18.1,
+    "report_s": 0.3
   }
 }

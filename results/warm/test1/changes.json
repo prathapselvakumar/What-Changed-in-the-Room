@@ -33,7 +33,7 @@
   },
   "scene": {
     "video": "test/test1.mp4",
-    "note": "very dark",
+    "note": "very dark, high angle; no visible change (low confidence)",
     "changes": [],
     "group": "warm"
   },
@@ -42,10 +42,10 @@
     "camera_height_m": 0.36
   },
   "timings": {
-    "keyframes_s": 0.9,
-    "reconstruction_s": 70.0,
-    "change_detection_s": 2.3,
-    "objects_s": 27.4,
-    "report_s": 1.1
+    "keyframes_s": 0.7,
+    "reconstruction_s": 0.6,
+    "change_detection_s": 0.0,
+    "objects_s": 5408.8,
+    "report_s": 2.1
   }
 }

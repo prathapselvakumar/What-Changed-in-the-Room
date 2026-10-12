@@ -33,6 +33,7 @@
   },
   "scene": {
     "video": "test/test9.mp4",
+    "note": "high angle; no visible change",
     "changes": [],
     "group": "warm"
   },
@@ -41,10 +42,10 @@
     "camera_height_m": 0.51
   },
   "timings": {
-    "keyframes_s": 1.1,
-    "reconstruction_s": 69.7,
-    "change_detection_s": 2.7,
-    "objects_s": 31.9,
-    "report_s": 0.2
+    "keyframes_s": 1.3,
+    "reconstruction_s": 1.3,
+    "change_detection_s": 0.0,
+    "objects_s": 9.5,
+    "report_s": 0.3
   }
 }

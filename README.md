@@ -154,11 +154,36 @@ The carved box measures 10 × 9 × 19 cm. Before the carving step the same glass
 
 Ray-cast box scenes with known changes check the evidence logic without real data ([tests/test_changes.py](tests/test_changes.py)): a chair moved 2 m, a removed box, an added board, an object hidden behind the board, and an object in a corner the first video never saw. All eight tests pass. The hidden object and the unseen object are classified 100% unknown, the static box 0% changed, and the moved chair is measured at 1.93 m with no false rotation.
 
-## 5. Discussion and limitations
+## 5. Design choices and trade-offs
 
-The evidence rule does what the challenge asks for: viewpoint differences, occlusion and incomplete coverage produce unknown areas, not changes. Most of the effort went into the cases where depth alone is not enough: misalignment between very different viewpoints, and transparent objects. The design note, [docs/DESIGN.md](docs/DESIGN.md), describes these decisions and two approaches that failed.
+The evidence rule does what the challenge asks for: viewpoint differences, occlusion and incomplete coverage produce unknown areas, not changes. Most of the effort went into the cases where depth alone is not enough.
 
-The results have clear limits.
+### 5.1 Evidence instead of distance
+
+A point counts as changed only when the other video looked through the space it occupies. The cost is that unknown areas produce no report at all, even when something did change there. For a robot that is the safer failure: "I have not checked the corner behind the door" can be acted on, while a guessed addition cannot.
+
+### 5.2 One reconstruction, a tolerance per pair
+
+Running both videos through VGGT together avoids a separate registration step that a moved object could pull off course. The two halves still differ by a few millimetres for pairs filmed from similar heights and by 4 to 6 cm for the high-angle pairs. A fixed tolerance either floods the high-angle pairs with false changes along every object outline or misses small objects in the good pairs, so the tolerance follows the measured alignment error of each pair. The cost is memory: VGGT fits about 80 frames in 16 GB, so each video contributes 40 keyframes and longer videos are subsampled.
+
+### 5.3 Transparent objects: what failed and what worked
+
+The depth model sees straight through the drinking glass in test7, in both videos, so the depth channel found nothing. Locating the glass with the appearance channel was the easy part; deciding what a candidate means was hard, and two approaches failed before the current one.
+
+- Cancelling mismatches that appear in both videos at the same place, on the idea that they are artefacts such as a static glass whose depth is wrong in both. A removed transparent glass also produces mismatches in both videos at its location, because rays from the after video pass through the spot where it stood, so this rule cancelled the real change.
+- Asking each video separately whether something stands at the candidate location, by testing which depth explains its own frames best (a plane sweep). Near object edges the background hypothesis was often poor, and the test said "present" in both videos for the removed glass.
+
+The working approach compares crops from matched before and after views directly, against control places seen through the same view pairs, and uses differential CLIP labelling to tell removed from added. Its weakness is calibration: the three thresholds (0.72, 0.10, 0.05) come from the same eight pairs.
+
+### 5.4 Exact outlines
+
+The first boxes came from the change voxels alone. The glass came out 88 cm long and floating above the desk, because both videos see it from similar directions and nothing fixes its depth. Carving the box from Segment Anything outlines fixed its width and height. Its depth is still assumed: about as deep as it is wide, resting on a surface, and in front of whatever is seen through it.
+
+### 5.5 Text from numbers
+
+Every sentence is assembled from `changes.json`, so the description cannot disagree with the geometry. Locations are given relative to the start of the first video, which a robot can use but a person finds awkward; describing them relative to nearby objects ("next to the black mug") would read better and is the next step I would take.
+
+## 6. Limitations
 
 - The thresholds (tolerance factor, similarity 0.72, gap 0.10, label margin 0.05) were set on the same eight pairs. The results show that the method separates these cases; they do not measure performance on new recordings.
 - The ground truth is my own visual judgement.
@@ -169,7 +194,7 @@ The results have clear limits.
 - The videos are 3 to 5 seconds long, so each covers a short path and some surfaces are seen by only one video.
 - The pipeline uses five large models and needs a CUDA GPU with about 12 GB of memory.
 
-## 6. Reproducing the results
+## 7. Reproducing the results
 
 Tested on Windows 11, Python 3.11, RTX 4090 Laptop GPU (16 GB).
 
@@ -204,7 +229,7 @@ Each pair writes to `results/<group>/<test>/`:
 | `scene.rrd` | 3D recording; open with `rerun results/<group>/<test>/scene.rrd` |
 | `recon.npz`, `changes.pkl`, `appearance.pkl` | caches |
 
-## 7. Repository structure
+## 8. Repository structure
 
 ```
 run.py                  two videos in, results out
@@ -224,7 +249,7 @@ wcitr/
   geometry.py           camera geometry
 tests/test_changes.py   synthetic scenes with known changes
 data/                   videos and scene list
-docs/                   DESIGN.md (design note), CAPTURE_GUIDE.md, assets/
+docs/assets/            GIFs and the top-down map used in this README
 ```
 
 ## References

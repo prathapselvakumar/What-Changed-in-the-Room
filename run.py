@@ -171,19 +171,21 @@ def run_pipeline(before, after, out, cfg, force=False, scene_info=None):
                     group.append(o)
     # Appearance-only candidates at the place of a depth-found object add nothing: depth already
     # gave the direction there (the appearance channel cannot tell added from removed as well).
-    geo = removed + added
-    for group in (removed, added):
-        for o in [o for o in group if o.get("source") == "appearance"]:
-            if any(objects.same_object(o, g, acfg["merge_distance"]) for g in geo if g.get("source") != "appearance"):
-                group.remove(o)
+    # (Lists are filtered by rebuilding them: list.remove compares records with ==, which fails on
+    # the NumPy arrays inside them.)
+    geo = [g for g in removed + added if g.get("source") != "appearance"]
+    removed, added = ([o for o in group if o.get("source") != "appearance"
+                       or not any(objects.same_object(o, g, acfg["merge_distance"]) for g in geo)]
+                      for group in (removed, added))
     # Every detection must also LOOK different between the videos at its place, clearly more than
     # nearby control places (drops static objects whose depth disagreed between the videos).
-    for group in (removed, added):
-        for o in list(group):
-            sim, control, _ = verify.similarity(o["xyz"], recon, comparer)
-            o["appearance_similarity"], o["appearance_control"] = sim, control
-            if np.isfinite(sim) and not verify.is_changed(sim, control, acfg):
-                group.remove(o)
+    def looks_changed(o, comparer=comparer):
+        sim, control, _ = verify.similarity(o["xyz"], recon, comparer)
+        o["appearance_similarity"], o["appearance_control"] = sim, control
+        return not np.isfinite(sim) or verify.is_changed(sim, control, acfg)
+
+    removed = [o for o in removed if looks_changed(o)]
+    added = [o for o in added if looks_changed(o)]
     del comparer
     print(f"verified objects: {len(removed)} removed, {len(added)} added")
     semantics.label_objects(removed, "removed", recon, keyframes, labeler)
